@@ -1,5 +1,5 @@
 #include <stdio.h>
 
-typedef struct {int capacity ; int battery ; float rechargetps} car;
+typedef struct {int capacity ; int battery ; float rechargetps;} Car;
 
-int test();
+void enter_car();
