@@ -19,11 +19,12 @@ result = (RoutedVehicle * 1)()
 computePath(
     (Node * 2)(Node(0, (c_float * 2)(0, 2)), Node(1, (c_float * 2)(2, 0))),
     c_int(2),
-    (Car * 1)(Car(2, 100, 100, 100)),
+    (Car * 1)(Car(2, 100, 50, 5)),
     c_int(1),
     byref(result)
 )
 for i in result:
-    print(i.nodeCount, i.time)
+    print("Length (in nodes, excluding first warehouse)", i.nodeCount, "time", i.time)
+    print("Route: 0", end="->")
     for j in range(i.nodeCount):
-        print(i.nodes[j], end=' ')
+        print(i.nodes[j], end="->")

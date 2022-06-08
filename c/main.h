@@ -27,7 +27,7 @@ typedef struct {
     /**
      * @brief The distance to the other nodes in km
      */
-    float distances[];
+    float* distances;
 } Node;
 
 typedef struct {

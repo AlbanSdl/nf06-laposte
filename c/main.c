@@ -57,8 +57,6 @@ void sort_cars_by_battery(Car *cars, int nbcar) {
 void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicle* result) {
     sort_cars_by_battery(cars, nbcar);
 
-    printf("Sorted vehicles");
-
     Status status[nbnodes];
     for (int i = 0; i < nbnodes; i++)
         status[i] = PENDING;
@@ -80,7 +78,7 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
 
     while (remainingNodes > 0) {
         
-        printf("Remaining nodes %d\n", remainingNodes);
+        // printf("Remaining nodes %d\n", remainingNodes);
 
         for (int i = nbcar - 1; i >= 0; i--) {
             int* deliveredNodes;
@@ -105,7 +103,7 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
 
                         deliveryCount++;
                         time += node->distances[0] * vehicle->speedkmh;
-                        deliveredNodes = malloc(sizeof(int) * 1);
+                        deliveredNodes = malloc(sizeof(int) * deliveryCount);
                         deliveredNodes[0] = ref->id;
                         break;
                     } else {
@@ -116,10 +114,10 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
                 }
             }
 
-            printf("Starting at %d\n", deliveredNodes[0]);
+            // printf("Starting at %d\n", deliveredNodes[0]);
 
             // Then we go to the closest node
-            while (deliveryCount < vehicle->capacity) {
+            while (deliveryCount < vehicle->capacity && remainingNodes > 0) {
                 Node currentNode = nodes[deliveredNodes[deliveryCount - 1]];
                 DistanceRef* ref = get_closest_neighbours(&currentNode, nbnodes);
                 short found = 0;
@@ -147,28 +145,68 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
 
             deliveredNodes = realloc(deliveredNodes, sizeof(int) * (1 + deliveryCount));
             deliveredNodes[deliveryCount] = 0;
+            deliveryCount++;
 
-            if (deliveryCount > 0) {
-                RoutedVehicle rvh = result[i];
-                if (rvh.nodeCount > 0) {
+            if (deliveryCount > 1) {
+                RoutedVehicle* rvh = &result[i];
+                if (rvh->nodeCount > 0) {
                     // We have to refuel the vehicle
                     time += vehicle->battery / vehicle->rechargetps;
                 }
 
-                rvh.nodes = realloc(rvh.nodes, sizeof(int) * (rvh.nodeCount + deliveryCount + 1));
+                rvh->nodes = realloc(rvh->nodes, sizeof(int) * (rvh->nodeCount + deliveryCount));
                 for (int i = 0; i < deliveryCount; i++)
-                    rvh.nodes[rvh.nodeCount + i] = deliveredNodes[i];
-                rvh.nodeCount += deliveryCount;
-                rvh.time += time;
+                    rvh->nodes[rvh->nodeCount + i] = deliveredNodes[i];
+                rvh->nodeCount += deliveryCount;
+                rvh->time += time;
             }
         }
 
         // All vehicles went for one travel
         // We reiterate that (if needed)
     }
+}
 
-    printf("FROM C: %d cars\n", nbcar);
-    for (int i = 0; i < nbcar; i++) {
-        printf("FROM C: car %d with %d nodes\n", i, result[i].nodeCount);
+// DEBUG
+int main() {
+    Node nodes[2] = {
+        {
+            id: 0,
+        },
+        {
+            id: 1,
+        }
+    };
+    nodes[0].distances = malloc(sizeof(float) * 2);
+    nodes[0].distances[0] = 0;
+    nodes[0].distances[1] = 2;
+    nodes[1].distances = malloc(sizeof(float) * 2);
+    nodes[1].distances[0] = 2;
+    nodes[1].distances[1] = 0;
+
+    Car cars[2] = {
+        {
+            battery: 100,
+            capacity: 2,
+            speedkmh: 5,
+            rechargetps: 5
+        },
+        {
+            battery: 90,
+            capacity: 3,
+            speedkmh: 5,
+            rechargetps: 5
+        }
+    };
+    RoutedVehicle* vehicles = malloc(sizeof(RoutedVehicle) * 2);
+    compute_path(nodes, 2, cars, 2, vehicles);
+    for (int i = 0; i < 2; i++) {
+        printf("Vehicle %d: %d nodes\n", i, vehicles[i].nodeCount);
+        for (int j = 0; j < vehicles[i].nodeCount; j++) {
+            printf("%d ", vehicles[i].nodes[j]);
+        }
+        printf("\n");
     }
+
+    return 0;
 }
