@@ -13,8 +13,6 @@ class RoutedVehicle(Structure):
 
 lib = CDLL('build/libevrp.dll')
 computePath = lib.compute_path
-computePath.argtypes = (POINTER(Node), c_int, POINTER(Car), c_int)
-computePath.restype = POINTER(RoutedVehicle)
 result = (RoutedVehicle * 1)()
 computePath(
     (Node * 2)(Node(0, (c_float * 2)(0, 2)), Node(1, (c_float * 2)(2, 0))),
