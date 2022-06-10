@@ -114,8 +114,6 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
                 }
             }
 
-            // printf("Starting at %d\n", deliveredNodes[0]);
-
             // Then we go to the closest node
             while (deliveryCount < vehicle->capacity && remainingNodes > 0) {
                 Node currentNode = nodes[deliveredNodes[deliveryCount - 1]];
@@ -123,17 +121,18 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
                 short found = 0;
 
                 for (int i = 1; i < nbnodes; i++) {
-                    if (status[ref->id] == PENDING) {
-                        Node* node = &nodes[ref->id];
-                        if (node->distances[0] <= battery - ref->distance) {
-                            battery -= node->distances[0];
-                            status[ref->id] = DELIVERED;
+                    DistanceRef distant = ref[i];
+                    if (status[distant.id] == PENDING) {
+                        Node* node = &nodes[distant.id];
+                        if (node->distances[0] <= battery - distant.distance) {
+                            battery -= distant.distance;
+                            status[distant.id] = DELIVERED;
                             remainingNodes--;
 
                             deliveryCount++;
                             time += node->distances[0] * vehicle->speedkmh;
                             deliveredNodes = realloc(deliveredNodes, sizeof(int) * deliveryCount);
-                            deliveredNodes[deliveryCount - 1] = ref->id;
+                            deliveredNodes[deliveryCount - 1] = distant.id;
                             found = 1;
                             break;
                         }
@@ -165,48 +164,4 @@ void compute_path(Node nodes[], int nbnodes, Car cars[], int nbcar, RoutedVehicl
         // All vehicles went for one travel
         // We reiterate that (if needed)
     }
-}
-
-// DEBUG
-int main() {
-    Node nodes[2] = {
-        {
-            id: 0,
-        },
-        {
-            id: 1,
-        }
-    };
-    nodes[0].distances = malloc(sizeof(float) * 2);
-    nodes[0].distances[0] = 0;
-    nodes[0].distances[1] = 2;
-    nodes[1].distances = malloc(sizeof(float) * 2);
-    nodes[1].distances[0] = 2;
-    nodes[1].distances[1] = 0;
-
-    Car cars[2] = {
-        {
-            battery: 100,
-            capacity: 2,
-            speedkmh: 5,
-            rechargetps: 5
-        },
-        {
-            battery: 90,
-            capacity: 3,
-            speedkmh: 5,
-            rechargetps: 5
-        }
-    };
-    RoutedVehicle* vehicles = malloc(sizeof(RoutedVehicle) * 2);
-    compute_path(nodes, 2, cars, 2, vehicles);
-    for (int i = 0; i < 2; i++) {
-        printf("Vehicle %d: %d nodes\n", i, vehicles[i].nodeCount);
-        for (int j = 0; j < vehicles[i].nodeCount; j++) {
-            printf("%d ", vehicles[i].nodes[j]);
-        }
-        printf("\n");
-    }
-
-    return 0;
 }
