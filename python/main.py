@@ -11,7 +11,7 @@ class Node(Structure):
     _fields_ = ("id", c_int), ("distances", POINTER(c_float))
 
 class RoutedVehicle(Structure):
-    _fields_ = ("nodes", POINTER(c_int)), ("nodeCount", c_int), ("time", c_float)
+    _fields_ = ("nodes", POINTER(c_int)), ("nodeCount", c_int), ("deliveries", c_int), ("distance", c_float), ("time", c_float)
 
 
 def computePath(nodes, cars) -> Array[RoutedVehicle]:
@@ -66,17 +66,26 @@ def displayResult(nodes, routedVehicles: Array[RoutedVehicle]):
     for node in nodes:
         G.add_node(node["id"], pos=(node["x"], node["y"]))
 
+    colors = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "grey"]
+
+    nb = 0
     for i in routedVehicles:
-        for j in range(0, i.nodeCount - 2):
-            if i == 0:
-                G.add_edge(0, i.nodes[j])
-            G.add_edge(i.nodes[j], i.nodes[j + 1])
+        for j in range(0, i.nodeCount - 1):
+            if j == 0:
+                G.add_edge(0, i.nodes[j], color=colors[nb % len(colors)])
+            G.add_edge(i.nodes[j], i.nodes[j + 1], color=colors[nb % len(colors)])
+        nb += 1
 
     pos=nx.get_node_attributes(G, 'pos')
-    nx.draw(G, pos, with_labels=True)
+    color = [G[u][v]['color'] for u,v in G.edges()]
+    nx.draw(G, pos, with_labels=True, edge_color=color)
     plt.show()
 
 
 (nodes, c_nodes, cars) = readFromFile("lieux.xlsx")
 routes = computePath(c_nodes, cars)
+
+for route in routes:
+    print(f"{route.deliveries} deliveries in {route.time} hours (after {route.distance} km)")
+
 displayResult(nodes, routes)
